@@ -40,7 +40,14 @@ class FlutterPaintController {
     _shapes.clear();
   }
 
-  List<Shape> get shapes => _shapes;
+  List<Shape> get shapes => [..._shapes];
+  List<Offset> get allPoints {
+    final offsets = <Offset>[];
+    for (var shape in shapes) {
+      offsets.addAll(shape.points);
+    }
+    return offsets;
+  }
 }
 
 class FlutterPaintCanvas extends StatefulWidget {
@@ -95,39 +102,42 @@ class _FlutterPaintCanvasState extends State<FlutterPaintCanvas> {
   Widget build(BuildContext context) {
     _afterEachBuild();
     return Center(
-      child: GestureDetector(
-        onPanStart: (details) {
-          if (_notAllowToPaint(details.globalPosition)) return;
-          setState(() {
-            _controller.onPanStart(details.localPosition);
-          });
-        },
-        onPanUpdate: (details) {
-          if (_notAllowToPaint(details.globalPosition)) return;
-          setState(() {
-            _controller.onPanUpdate(details.localPosition);
-          });
-        },
-        onPanDown: (details) {
-          if (_notAllowToPaint(details.globalPosition)) return;
-          setState(() {
-            _controller.onPanDown(details.localPosition);
-          });
-        },
-        onPanEnd: (details) {
-          setState(() {
-            _controller.onPanEnd();
-          });
-        },
-        child: ColoredBox(
-          color: Colors.white,
-          child: CustomPaint(
-            key: _canvasKey,
-            size: widget._size,
-            painter: MyPaint(
-              paintTool: _controller._currentPaintTool,
-              shapeUnderConstruction: _controller._shapeUnderConstruction,
-              shapes: _controller.shapes,
+      child: MouseRegion(
+        // cursor: SystemMouseCursors.,
+        child: GestureDetector(
+          onPanStart: (details) {
+            if (_notAllowToPaint(details.globalPosition)) return;
+            setState(() {
+              _controller.onPanStart(details.localPosition);
+            });
+          },
+          onPanUpdate: (details) {
+            if (_notAllowToPaint(details.globalPosition)) return;
+            setState(() {
+              _controller.onPanUpdate(details.localPosition);
+            });
+          },
+          onPanDown: (details) {
+            if (_notAllowToPaint(details.globalPosition)) return;
+            setState(() {
+              _controller.onPanDown(details.localPosition);
+            });
+          },
+          onPanEnd: (details) {
+            setState(() {
+              _controller.onPanEnd();
+            });
+          },
+          child: ColoredBox(
+            color: Colors.white,
+            child: CustomPaint(
+              key: _canvasKey,
+              size: widget._size,
+              painter: MyPaint(
+                paintTool: _controller._currentPaintTool,
+                shapeUnderConstruction: _controller._shapeUnderConstruction,
+                shapes: _controller.shapes,
+              ),
             ),
           ),
         ),
