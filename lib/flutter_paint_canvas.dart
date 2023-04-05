@@ -47,18 +47,16 @@ class FlutterPaintCanvas extends StatefulWidget {
 
 class _FlutterPaintCanvasState extends State<FlutterPaintCanvas> {
   late final FlutterPaintController _controller;
-  late final Offset _globalCanvasOffset;
-  late final double _minDx, _maxDx;
-  late final double _minDy, _maxDy;
+  late Offset _globalCanvasOffset;
+  late double _minDx, _maxDx;
+  late double _minDy, _maxDy;
   @override
   void initState() {
     _controller = widget._controller;
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _calculateBoundary(context));
     super.initState();
   }
 
-  void _calculateBoundary(BuildContext context) {
+  void _calculateBoundary() {
     final canvasRenderBox =
         _canvasKey.currentContext?.findRenderObject() as RenderBox;
     _globalCanvasOffset = canvasRenderBox.localToGlobal(Offset.zero);
@@ -66,6 +64,11 @@ class _FlutterPaintCanvasState extends State<FlutterPaintCanvas> {
     _minDy = _globalCanvasOffset.dy;
     _maxDx = _minDx + widget._size.width;
     _maxDy = _minDy + widget._size.height;
+  }
+
+  Future<void> _afterEachBuild() async {
+    await Future.delayed(Duration.zero);
+    _calculateBoundary();
   }
 
   bool _notAllowToPaint(Offset globalOffset) {
@@ -77,6 +80,7 @@ class _FlutterPaintCanvasState extends State<FlutterPaintCanvas> {
 
   @override
   Widget build(BuildContext context) {
+    _afterEachBuild();
     return Center(
       child: GestureDetector(
         onPanStart: (details) {
