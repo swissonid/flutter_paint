@@ -1,3 +1,4 @@
+import 'package:fill_problem/paint_tools.dart';
 import 'package:fill_problem/shape.dart';
 import 'package:flutter/material.dart';
 
@@ -6,6 +7,13 @@ final _canvasKey = GlobalKey();
 class FlutterPaintController {
   final _shapes = <Shape>[];
   final _shapeUnderConstruction = <Offset>[];
+  PaintTool _currentPaintTool = Pencil();
+
+  PaintTool get currentPaintTool => _currentPaintTool;
+  set currentPaintTool(PaintTool paintTool) {
+    _currentPaintTool = paintTool;
+  }
+
   void onPanStart(Offset details) {
     _shapeUnderConstruction.add(details);
   }
@@ -19,7 +27,12 @@ class FlutterPaintController {
   }
 
   void onPanEnd() {
-    _shapes.add(Shape(points: _shapeUnderConstruction));
+    _shapes.add(
+      Shape(
+        points: [..._shapeUnderConstruction],
+        paintTool: _currentPaintTool.copy(),
+      ),
+    );
     _shapeUnderConstruction.clear();
   }
 
@@ -112,6 +125,7 @@ class _FlutterPaintCanvasState extends State<FlutterPaintCanvas> {
             key: _canvasKey,
             size: widget._size,
             painter: MyPaint(
+              paintTool: _controller._currentPaintTool,
               shapeUnderConstruction: _controller._shapeUnderConstruction,
               shapes: _controller.shapes,
             ),
@@ -125,14 +139,11 @@ class _FlutterPaintCanvasState extends State<FlutterPaintCanvas> {
 class MyPaint extends CustomPainter {
   final List<Shape> _shapes;
   final List<Offset> _shape;
-  final _paint = Paint()
-    ..color = Colors.red
-    ..strokeWidth = 4
-    ..isAntiAlias = true
-    ..strokeCap = StrokeCap.round;
+  final PaintTool paintTool;
   MyPaint(
       {required List<Offset> shapeUnderConstruction,
-      required List<Shape> shapes})
+      required List<Shape> shapes,
+      required this.paintTool})
       : _shapes = shapes,
         _shape = shapeUnderConstruction,
         super();
@@ -140,13 +151,13 @@ class MyPaint extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     _drawShape(canvas, _shape);
     for (var shape in _shapes) {
-      shape.draw(canvas);
+      shape.drawOn(canvas);
     }
   }
 
   void _drawShape(Canvas canvas, List<Offset> shape) {
     for (var i = 0; i < shape.length - 1; i++) {
-      canvas.drawLine(shape[i], shape[i + 1], _paint);
+      paintTool.drawOn(canvas, shape);
     }
   }
 
